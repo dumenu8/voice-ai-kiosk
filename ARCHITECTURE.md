@@ -1,291 +1,122 @@
-# PROJECT SPECIFICATION: Voice-Enabled AI Kiosk
+# 🏗️ Architecture Specification: Voice-Enabled AI Kiosk
 
-## 1. High-Level Mission
-Build a Dual-View Voice AI Kiosk.
+This document outlines the technical architecture, data flows, and infrastructure for the Voice AI Kiosk system. The project follows a **Local-First / Open Source** principle, ensuring all AI processing happens on-premise without reliance on external cloud APIs.
 
-Customer View (Chat): A Voice-to-Voice interface where customers place orders using natural language. The AI uses RAG to check the menu and inserts confirmed orders into Postgres.
+---
+
+## 🚀 1. High-Level Mission
+The system provides a **Dual-View** interface for a restaurant/retail environment:
+
+1.  **Customer View (Chat):** A Voice-to-Voice interface where customers place orders using natural language. It uses RAG (Retrieval-Augmented Generation) to query the menu and process orders.
+2.  **Admin View (Dashboard):** A real-time kitchen display showing the state of the Postgres orders database (Pending vs. Confirmed).
 
-Admin View (Dashboard): A real-time table displaying the state of the Postgres orders database (Pending vs. Confirmed orders) to prove that the voice commands actually triggered a database transaction.
+---
+
+## 🛠️ 2. Technology Stack
 
-- Input: User speaks to Angular Frontend.
+### Frontend (Client)
+- **Framework:** Angular v21 (Standalone Components, Signals-based architecture).
+- **Styling:** TailwindCSS with a sleek Dark Mode theme.
+- **Audio:** Native Browser MediaStream API & MediaRecorder.
 
-- Knowledge (RAG): The AI retrieves relevant menu items (descriptions, prices, allergens) from a Postgres Vector Database based on the user's query.
+### Backend (Server)
+- **Runtime:** Python 3.11+.
+- **Framework:** FastAPI (Asynchronous).
+- **Database:** PostgreSQL + `pgvector` (Vector similarity search).
+- **ORM:** SQLAlchemy (Async).
 
-- Logic (LLM): The AI answers questions or constructs an order.
+### AI Engine (Local Infrastructure)
+- **STT (Speech-to-Text):** Faster-Whisper (`distil-large-v3` with Int8 quantization).
+- **LLM (Brain):** Local LLM (via LM Studio/Ollama) emulating OpenAI API.
+- **TTS (Text-to-Speech):** Qwen3-TTS.
+- **Embeddings:** `all-MiniLM-L6-v2` (via `sentence-transformers`).
 
-- Action (SQL): If the user confirms an order, the system inserts the order row into the Postgres relational table.
+---
 
-- Output: The AI replies via Text-to-Speech (TTS).
+## 📐 3. Component Breakdown
 
-## 2. Technology Stack & Constraints
-We are adhering to a strict Local-First / Open Source stack.
+### A. Frontend Architecture
+The app uses a single shell (`AppComponent`) with a view switcher to toggle between modes.
 
-Frontend (Client)
-Framework: Angular v21 (Standalone Components, scss, non SSG/SSR, Signals-based architecture, use latest structure flow @if, @for).
+#### 1. Kiosk Mode (`ChatWindowComponent`)
+- **VoiceInputComponent:** A "Push-to-Talk" button using `mousedown` and `mouseup` events.
+- **Visualizer:** A CSS-based waveform animation that reacts when the microphone is active.
+- **Audio processing:** Captures 16kHz mono audio, converts to `.wav` blob, and transmits via `multipart/form-data`.
 
-Style System: TailwindCSS, dark theme (for rapid UI).
+#### 2. Kitchen Display (`OrderDashboardComponent`)
+- **Responsibility:** Fetches and displays the raw orders from the database.
+- **Features:** Real-time refresh button, order status tracking (Pending/Confirmed), and item breakdown.
 
-Layout Strategy:
+### B. Backend Architecture
+The FastAPI server handles logic orchestration, AI pipeline management, and database transactions.
 
-AppComponent: Acts as the shell. Contains a "View Switcher" (Segmented Control or Tabs) to toggle between:
+#### Primary Endpoint: `POST /api/conversation`
+1.  **Input:** Multipart form (audio file or text string + `session_id`).
+2.  **Orchestration:** 
+    - STT -> Transcription.
+    - RAG -> Vector search in `menu_items`.
+    - LLM -> Intent analysis and response generation.
+    - Database -> Insert order if intent confirmed.
+    - TTS -> Convert reply text to audio.
+3.  **Output:** JSON `{ user_text, ai_text, audio_base64 }`.
 
-View A: Kiosk Mode (The Chat Interface).
+---
 
-View B: Kitchen Display (The Order Table).
+## 🗄️ 4. Database Schema
 
-Audio Capture: Native Browser MediaStream API (No 3rd party audio recorders).
+The system uses **PostgreSQL** with the `pgvector` extension to handle both relational and semantic data.
 
-State Management: Angular Signals.
+### Table: `menu_items` (The Knowledge Base)
+Used for RAG to provide context to the LLM.
 
-Backend (Server)
-Runtime: Python 3.11+.
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | Serial (PK) | Unique item ID |
+| `name` | Text | Name (e.g., "Volcano Burger") |
+| `description`| Text | Ingredients/Description |
+| `price` | Decimal | Cost in USD |
+| `embedding` | `vector(384)`| Semantic vector of name + description |
 
-Framework: FastAPI (Async support is mandatory).
+### Table: `orders` (The Transaction Log)
+Tracks customer purchases in real-time.
 
-Containerization: Docker (The backend must run inside a container).
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | Serial (PK) | Order number |
+| `session_id` | Text | Links to the frontend session |
+| `items_json` | JSONB | List of items (e.g., `[{"item": "Burger", "qty": 1}]`) |
+| `total_price`| Decimal | Final total |
+| `status` | Text | `PENDING` or `CONFIRMED` |
+| `created_at` | Timestamp | Order timestamp |
 
-API Protocol: REST for control, sending multipart/form-data for audio upload.
+---
 
-AI Services (Infrastructure)
-LLM Host: LM Studio running locally (emulating OpenAI API at http://localhost:1234/v1).
+## 🔄 5. Detailed Data Flow
 
-Speech-to-Text (STT): Faster-Whisper (running inside the Python backend container).
-
-Text-to-Speech (TTS): Qwen3-TTS (specifically the Open Source release).
-
-Database (The Core Change)
-Image: pgvector/pgvector:pg16 (Official Postgres image with vector extension pre-installed).
-
-Role 1 (Vector Store): Stores menu embeddings (Semantic Search).
-
-Role 2 (Relational Store): Stores confirmed customer orders (Transactional).
-
-Backend (Python/FastAPI)
-ORM: SQLAlchemy or asyncpg for database interactions.
-
-Embedding Model: sentence-transformers/all-MiniLM-L6-v2 (Runs locally in Python container using sentence_transformers lib).
-
-Role: Converts user voice text -> Vector -> Search Postgres.
-
-3. Architecture Breakdown
-A. Frontend Architecture (Angular)
-
-Layout Strategy:
-
-AppComponent: Acts as the shell. Contains a "View Switcher" (Segmented Control or Tabs) to toggle between:
-
-View A: Kiosk Mode (The Chat Interface: ChatWindowComponent).
-
-View B: Kitchen Display (The Order Table: OrderDashboardComponent).
-
-Component: OrderDashboardComponent (Standalone)
-
-Responsibility: Fetches and displays the raw content of the orders database table.
-
-UI Structure:
-
-A clean HTML Table (Tailwind styled).
-
-Columns: Order ID, Session ID, Items (JSON), Total Price, Status, Timestamp.
-
-"Refresh" Button: Manually re-triggers the API fetch to see new orders appearing.
-
- Service Logic:
-
-OrderService:
-
-getOrders(): Observable that calls GET /api/orders.
-
-placeOrder(orderData): Calls POST /api/orders (Used by the Chat component when AI confirms intent).
-
-ChatWindowComponent: A typical LLM chat interface, displays the scrolling list of user (text) and AI (text) messages.
-User able to send text messages or record voice.
-
-VoiceInputComponent:
-
-UI: A "Push-to-Talk" mic button.
-
-Behavior:
-
-mousedown / touchstart: Initialize microphone stream, show "Listening" visualizer.
-
-mouseup / touchend: Stop stream, convert blob to .wav, submit to Backend.
-
-Visualizer: Simple CSS-based waveform animation when active.
-
-Noise Cancellation: Use the web browser's native noise suppression: navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).
-
-Services:
-
-AudioService: Handles navigator.mediaDevices.getUserMedia and MediaRecorder.
-
-KioskApiService: Handles POST requests to the backend.
-
-B. Backend Architecture (Python/FastAPI)
-Endpoints:
-
-POST /api/conversation
-
-Input: Multipart form data (file: audio blob OR text: string).
-
-Logic:
-
-If Audio: Pass to STT Engine -> Get Text.
-
-Send Text to LLM (LM Studio) with System Prompt -> Get JSON Response.
-
-Extract "reply_text" from JSON.
-
-Send "reply_text" to TTS Engine -> Get Audio Bytes.
-
-Output: JSON Object containing:
-
-user_text: (String) What the user said.
-
-ai_text: (String) The text reply.
-
-audio_base64: (String) The TTS audio to play immediately.
-
-C. AI Pipeline Details
-The Ear (STT): Use faster-whisper with distil-large-v3 model (Int8 quantization) for sub-second latency on CPU.
-
-The Brain (LLM): Connect to http://host.docker.internal:1234/v1.
-
-System Prompt: "You are a helpful kiosk assistant. Keep answers under 2 sentences. Always return valid JSON."
-
-The Mouth (TTS): Qwen3-TTS.
-
-Input: Text string.
-
-Output: PCM/WAV bytes.
-
-4. Data Flow (Step-by-Step)
-User holds "Mic Button" -> Angular records audio.
-
-User releases button -> Angular POSTs blob to /api/conversation.
-
-FastAPI receives file -> Saves temp .wav.
-
-FastAPI calls model.transcribe("temp.wav") -> Gets "I want a burger."
-
-FastAPI POSTs to localhost:1234/v1/chat/completions:
-
-Content: "User said: I want a burger."
-
-LM Studio replies: "Which sauce would you like?"
-
-FastAPI calls Qwen3TTS.synthesize("Which sauce would you like?").
-
-FastAPI returns JSON { "user": "...", "ai": "...", "audio": "<base64>" }.
-
-Angular receives JSON -> Adds text bubbles to UI -> Auto-plays audio.
-
-5. Development Plan (Agent Instructions)
-Scaffold Backend: Create backend/ folder, Dockerfile, requirements.txt (fastapi, faster-whisper, python-multipart, openai, requests).
-
-Scaffold Frontend: Create frontend/ (Angular 21 new app).
-
-Docker Setup: Create docker-compose.yml to run the Backend and map ports.
-
-Implementation:
-
-Implement STT in Python.
-
-Implement LLM connection in Python.
-
-Implement TTS in Python.
-
-Build Angular Chat Interface.
-
-Wire up Audio Recording logic.
-
-6. Context Management Rule: The Backend must maintain an in-memory dictionary to store conversation history, keyed by a session_id.
-
-The Angular Frontend must generate a UUID on startup and send it as a form field session_id in every API call.
-
-The Backend must retrieve the history list for that session_id, append the new user message, and pass the entire list to the LM Studio API messages parameter.
-
-The Backend must append the LLM's response to the history list before returning.
-
-7. Database Schema Strategy
-The agent must create two primary tables in Postgres:
-
-Table A: menu_items (The Knowledge Base)
-
-id: Serial (PK)
-
-name: Text (e.g., "Volcano Burger")
-
-description: Text (e.g., "Spicy beef burger with jalapeños")
-
-price: Decimal
-
-embedding: vector(384) (Stores the semantic meaning of the name + description)
-
-Table B: orders (The Transaction Log)
-
-id: Serial (PK)
-
-session_id: Text (Links to user session)
-
-items_json: JSONB (Stores the list of items ordered, e.g., [{"item": "Burger", "qty": 2}])
-
-total_price: Decimal
-
-status: Text (e.g., "PENDING", "CONFIRMED")
-
-created_at: Timestamp
-
-8. The New Data Flow (RAG + Order Logic)
-StT: Backend receives audio -> Whisper converts to text: "Do you have anything spicy?"
-
-Embedding: Python uses all-MiniLM-L6-v2 to convert "Do you have anything spicy?" into a Vector array [0.1, -0.5, ...].
-
-RAG Retrieval (SQL): Python runs a vector similarity query on Postgres:
-
-SQL
-SELECT name, description, price FROM menu_items
-ORDER BY embedding <-> '[0.1, -0.5, ...]' LIMIT 3;
-Result: "Volcano Burger ($15), Spicy Wings ($10)."
-
-LLM Context Injection: Python constructs the prompt:
-
-"System: You are a waiter. Here is the relevant menu info: [Volcano Burger, Spicy Wings]. User asks: 'Do you have anything spicy?'"
-
-LLM Response: "Yes! We have a Volcano Burger for $15."
-
-User Reply: "Okay, I'll take one Volcano Burger."
-
-Logic Branch (Order Placement):
-
-LLM recognizes intent to buy.
-
-LLM outputs structured JSON: { "action": "insert_order", "items": ["Volcano Burger"], "price": 15 }.
-
-Python Logic: Detects "action": "insert_order" -> Runs SQL INSERT INTO orders....
-
-TTS: Backend generates audio: "Order confirmed. One Volcano Burger coming up."
-
-9. Agent Instructions (Step-by-Step)
-Docker Update: Update docker-compose.yml to add a db service using pgvector/pgvector:pg16.
-
-Seeding Script: Create a Python script seed_menu.py that:
-
-Connects to Postgres.
-
-Creates the vector extension.
-
-Creates tables.
-
-Loads a dummy menu (JSON), generates embeddings using sentence_transformers, and inserts them into menu_items.
-
-Backend RAG Logic:
-
-Install sentence_transformers and sqlalchemy.
-
-On every chat request, generate vector for user input -> Query DB -> Append results to System Prompt.
-
-Backend Order Logic:
-
-If LLM JSON indicates an order, execute INSERT statement to orders table.
-
+1.  **Input:** User says *"I'd like a spicy burger."*
+2.  **Transcription:** `faster-whisper` converts audio to text.
+3.  **Semantic Search:**
+    - System generates a vector for *"spicy burger"*.
+    - SQL Query: `SELECT * FROM menu_items ORDER BY embedding <-> '[vector]' LIMIT 3;`
+    - Result: *Volcano Burger ($15)*.
+4.  **Reasoning (LLM):**
+    - **Context:** System prompt + Menu RAG results + Session history.
+    - **Output:** AI decides to recommend the Volcano Burger and formats a response.
+5.  **Action:**
+    - If user says *"Yes, I want that"*, the LLM triggers a structured JSON action: `{ "action": "insert_order", "items": [...] }`.
+    - Backend executes `INSERT INTO orders`.
+6.  **Response:** TTS generates audio of the AI's reply ("Order confirmed!") and sends it back to Angular.
+
+---
+
+## 🐳 6. Deployment & Infrastructure
+The entire stack is containerized for portability.
+
+- **`db` service:** Postgres + pgvector.
+- **`backend` service:** FastAPI + AI models.
+- **`frontend` service:** Nginx serving the Angular build (optional for production).
+- **Communication:** Services interact over a shared Docker bridge network.
+
+---
+
+*Last Updated: January 2026*

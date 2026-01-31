@@ -2,6 +2,13 @@
 
 A powerful, dual-view AI Kiosk system designed for natural language voice ordering. This project demonstrates a complete **local-first** AI pipeline, from speech-to-text to semantic menu retrieval (RAG) and transactional order processing.
 
+## 📸 Screenshots
+
+| Customer Voice Interface | Admin Menu Dashboard |
+|:---:|:---:|
+| ![Voice Interface](./voice-interface-screenshot.png) | ![Kiosk Menu](./kiosks-menu-screeenshot.png) | ![Kitchen Dashboard](./kitchen-dashboard-screenshot.png)
+
+
 ## ✨ Key Features
 
 - **Voice-to-Voice Ordering:** A seamless "Push-to-Talk" interface powered by the browser's MediaStream API.
@@ -57,9 +64,8 @@ A powerful, dual-view AI Kiosk system designed for natural language voice orderi
 
 5. **Run the TTS Server:**
    ```bash
+   # Ensure qwen3-tts is installed (https://github.com/QwenLM/Qwen3-TTS)
    cd tts_server
-   # Ensure dependencies are installed
-   pip install -r requirements.txt
    python tts_server.py
    ```
 

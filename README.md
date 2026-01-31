@@ -4,8 +4,8 @@ A powerful, dual-view AI Kiosk system designed for natural language voice orderi
 
 ## 📸 Screenshots
 
-| Customer Voice Interface | Admin Menu Dashboard |
-|:---:|:---:|
+| Customer Voice Interface | Kiosks Menu | Kitchen Dashboard |
+|:---:|:---:|:---:|
 | ![Voice Interface](./voice-interface-screenshot.png) | ![Kiosk Menu](./kiosks-menu-screeenshot.png) | ![Kitchen Dashboard](./kitchen-dashboard-screenshot.png)
 
 

@@ -1,0 +1,30 @@
+<div class="p-6 bg-gray-900 min-h-screen text-gray-100">
+  <h1 class="text-3xl font-bold mb-6 text-yellow-400">Kitchen Dashboard</h1>
+  
+  <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-xl">
+    <table class="w-full text-left">
+      <thead class="bg-gray-700 text-gray-300 uppercase text-sm">
+        <tr>
+          <th class="py-3 px-6">Order ID</th>
+          <th class="py-3 px-6">Status</th>
+          <th class="py-3 px-6">Items</th>
+          <th class="py-3 px-6">Total Price</th>
+          <th class="py-3 px-6">Time</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-200">
+        <tr *ngFor="let order of orders()" class="border-b border-gray-700 hover:bg-gray-750">
+          <td class="py-4 px-6 font-mono text-yellow-500">#{{ order.id }}</td>
+          <td class="py-4 px-6">
+            <span class="bg-green-600 text-white py-1 px-3 rounded-full text-xs font-bold uppercase">
+              {{ order.status }}
+            </span>
+          </td>
+          <td class="py-4 px-6">{{ formatItems(order.items_json) }}</td>
+          <td class="py-4 px-6 font-bold text-green-400">${{ order.total_price.toFixed(2) }}</td>
+          <td class="py-4 px-6 text-sm text-gray-400">{{ order.created_at | date:'shortTime' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

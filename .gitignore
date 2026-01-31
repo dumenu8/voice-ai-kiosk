@@ -1,0 +1,39 @@
+# Node / Angular
+**/node_modules/
+**/dist/
+**/.angular/
+**/.editorconfig
+**/.vscode/
+**/.postcssrc.json
+frontend/proxy.conf.json
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.venv/
+**/venv/
+**/ENV/
+**/env/
+**/.pytest_cache/
+**/build/
+**/*.egg-info/
+**/*.egg
+
+# Audio / Temp files
+**/*.wav
+**/*.mp3
+backend/response_audio.wav
+backend/test_audio.wav
+
+# Docker
+.docker/
+
+# Environment variables
+.env
+**/.env
+
+# OS files
+.DS_Store
+Thumbs.db

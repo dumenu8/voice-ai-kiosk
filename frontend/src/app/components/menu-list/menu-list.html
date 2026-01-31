@@ -1,0 +1,33 @@
+<div class="p-6 bg-gray-900 min-h-screen text-gray-100">
+    <div class="flex items-center space-x-4 mb-6">
+        <div
+            class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center font-bold text-white shadow-lg text-xl">
+            🍔</div>
+        <h1 class="text-3xl font-bold text-orange-400">Full Menu</h1>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+        <div *ngIf="isLoading()" class="p-8 text-center text-gray-400 animate-pulse">
+            Loading menu items...
+        </div>
+
+        <table *ngIf="!isLoading()" class="w-full text-left">
+            <thead class="bg-gray-700 text-gray-300 uppercase text-sm">
+                <tr>
+                    <th class="py-3 px-6 w-20">ID</th>
+                    <th class="py-3 px-6 w-1/4">Name</th>
+                    <th class="py-3 px-6">Description</th>
+                    <th class="py-3 px-6 w-32 text-right">Price</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-200">
+                <tr *ngFor="let item of items()" class="border-b border-gray-700 hover:bg-gray-750 transition-colors">
+                    <td class="py-4 px-6 font-mono text-gray-500">#{{ item.id }}</td>
+                    <td class="py-4 px-6 font-bold text-white text-lg">{{ item.name }}</td>
+                    <td class="py-4 px-6 text-gray-400">{{ item.description }}</td>
+                    <td class="py-4 px-6 text-right font-bold text-green-400 text-xl">${{ item.price.toFixed(2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

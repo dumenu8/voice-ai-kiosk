@@ -1,0 +1,18 @@
+<button (mousedown)="startRecording($event)" (mouseup)="stopRecording($event)" (mouseleave)="stopRecording($event)"
+    (touchstart)="startRecording($event)" (touchend)="stopRecording($event)" [class.bg-red-600]="isRecording()"
+    [class.hover:bg-red-700]="isRecording()" [class.animate-pulse]="isRecording()" [class.bg-blue-600]="!isRecording()"
+    [class.hover:bg-blue-700]="!isRecording()"
+    class="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 select-none -webkit-user-select-none">
+    <svg *ngIf="!isRecording()" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+    </svg>
+
+    <svg *ngIf="isRecording()" xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+    </svg>
+</button>

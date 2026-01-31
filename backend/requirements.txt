@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+asyncpg
+pgvector
+sentence-transformers
+faster-whisper
+python-multipart
+openai
+requests
+python-dotenv

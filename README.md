@@ -1,6 +1,6 @@
 # 🎙️ Voice-Enabled AI Kiosk
 
-A powerful, dual-view AI Kiosk system designed for natural language voice ordering. This project demonstrates a complete **local-first** AI pipeline, from speech-to-text to semantic menu retrieval (RAG) and transactional order processing.
+A proof of concept for powerful, dual-view AI Kiosk system designed for natural language voice ordering. This project demonstrates a complete **local-first** AI pipeline, from speech-to-text to semantic menu retrieval (RAG) and transactional order processing.
 
 ## 📸 Screenshots
 
@@ -32,13 +32,15 @@ A powerful, dual-view AI Kiosk system designed for natural language voice orderi
 
 ### Prerequisites
 - Docker & Docker Compose
+- Node.js - v20.19.0 or newer for running Angular V21 [Angular](https://angular.dev/installation)
 - LM Studio (running an OpenAI-compatible server at `http://localhost:1234`)
+- Qwen3 TTS [Github](https://github.com/QwenLM/Qwen3-TTS)
 
 ### Installation & Setup
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/voice-ai-kiosk.git
+   git clone https://github.com/dumenu8/voice-ai-kiosk.git
    cd voice-ai-kiosk
    ```
 
